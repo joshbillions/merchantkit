@@ -120,9 +120,9 @@ public final class Merchant {
     }
     
     /// Begin buying a product, supplying a `purchase` fetched from the `AvailablePurchasesTask`.
-    public func commitPurchaseTask(for purchase: Purchase, applying discount: PurchaseDiscount? = nil) -> CommitPurchaseTask {
+    public func commitPurchaseTask(for purchase: Purchase) -> CommitPurchaseTask {
         return self.makeTask(initializing: {
-            let task = CommitPurchaseTask(for: purchase, applying: discount, with: self)
+            let task = CommitPurchaseTask(for: purchase, with: self)
             
             return task 
         })
@@ -366,9 +366,9 @@ extension Merchant {
 extension Merchant {
     /// Check if a subscription should be considered active for a given expiry date.
     private func isSubscriptionActive(forExpiryDate expiryDate: Date) -> Bool {
-        let leewayTimeInterval = self.configuration.receiptValidator.subscriptionRenewalLeeway.allowedElapsedDuration
+        let leeway: TimeInterval = 60 // one minute of leeway, could make this a configurable setting in future
         
-        return expiryDate.addingTimeInterval(leewayTimeInterval) > self.nowDate
+        return expiryDate.addingTimeInterval(leeway) > self.nowDate
     }
     
     /// Warns users if `Merchant` has not been correctly configured.

@@ -203,21 +203,14 @@ class ProductInterfaceControllerTests : XCTestCase {
         
         let (commitProduct, commitPurchase) = testProductsAndPurchases.first!
         
-        let errorsAndExpectations: [(Error, ProductInterfaceController.CommitPurchaseError)] = {
-            var errorsAndExpectations: [(Error, ProductInterfaceController.CommitPurchaseError)] = [
-                (SKError(.paymentCancelled), .userCancelled),
-                (SKError(.paymentNotAllowed), .paymentNotAllowed),
-                (SKError(.paymentInvalid), .paymentInvalid),
-                (URLError(.notConnectedToInternet), .networkError(URLError(.notConnectedToInternet))),
-                (MockError.mockError, .genericProblem(MockError.mockError))
-            ]
-            
-            #if os(iOS)
-            errorsAndExpectations.append((SKError(.storeProductNotAvailable), .purchaseNotAvailable))
-            #endif
-            
-            return errorsAndExpectations
-        }()
+        let errorsAndExpectations: [(Error, ProductInterfaceController.CommitPurchaseError)] = [
+            (SKError(.paymentCancelled), .userCancelled),
+            (SKError(.storeProductNotAvailable), .purchaseNotAvailable),
+            (SKError(.paymentNotAllowed), .paymentNotAllowed),
+            (SKError(.paymentInvalid), .paymentInvalid),
+            (URLError(.notConnectedToInternet), .networkError(URLError(.notConnectedToInternet))),
+            (MockError.mockError, .genericProblem(MockError.mockError))
+        ]
         
         var index = 0
         
@@ -268,17 +261,9 @@ class ProductInterfaceControllerTests : XCTestCase {
     }
     
     func testFetchPurchaseErrorMatchesExpectations() {
-        let skError: SKError
-        
-        #if os(iOS)
-        skError = SKError(.storeProductNotAvailable)
-        #elseif os(macOS)
-        skError = SKError(.paymentNotAllowed)
-        #endif
-        
         let errors: [Error] = [
             URLError(.notConnectedToInternet),
-            skError,
+            SKError(.storeProductNotAvailable),
             MockError.mockError
         ]
         

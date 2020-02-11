@@ -5,10 +5,6 @@ internal class TestingReceiptValidator : ReceiptValidator {
         self.wrapping = validator
     }
 
-    internal var subscriptionRenewalLeeway: ReceiptValidatorSubscriptionRenewalLeeway {
-        return self.wrapping.subscriptionRenewalLeeway
-    }
-    
     internal func validate(_ request: ReceiptValidationRequest, completion: @escaping (Result<Receipt, Swift.Error>) -> Void) {
         if request.reason == .initialization {
             completion(.failure(Error.failingInitializationOnPurposeForTesting))

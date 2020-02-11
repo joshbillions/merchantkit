@@ -9,8 +9,6 @@ class MockReceiptValidator : ReceiptValidator {
         
     }
     
-    var subscriptionRenewalLeeway: ReceiptValidatorSubscriptionRenewalLeeway = .default
-    
     func validate(_ request: ReceiptValidationRequest, completion: @escaping (Result<Receipt, Error>) -> Void) {
         self.validateRequest(request, completion)
     }

@@ -12,7 +12,7 @@ public protocol ProductInterfaceControllerDelegate : AnyObject {
 /// This controller is actively being worked on and the API surface is considered volatile.
 /// This controller manages the purchased state of the supplied `products`. This controller is a convenience wrapper around several `Merchant` tasks and is intended to be used to display a user interface, like a storefront.
 ///
-/// Create a controller and call `fetchDataIfNecessary()` when the user interface is presented. Update UI in response to state changes, via the `delegate`. Delegate methods are invoked on the main queue.
+/// Create a controller and call `fetchDataIfNecessary()` when the user interface is presented. Update UI in response to state changes, via the `delegate`.
 ///
 /// If the user decides to purchase a displayed product, use the `commit(_:)` method to begin a purchase flow. Alternatively, call `restorePurchases()` if the user wants to restore an earlier transaction.
 
@@ -95,45 +95,47 @@ public final class ProductInterfaceController {
     }
     
     /// Purchase a `Product` managed by this controller.
-    public func commit(_ purchase: Purchase, applying discount: PurchaseDiscount? = nil) {
+    public func commit(_ purchase: Purchase) {
         guard let product = self.products.first(where: { product in
             product.identifier == purchase.productIdentifier
         }) else { MerchantKitFatalError.raise("The `Purchase` cannot be committed to this `ProductInterfaceController` instance as it is not vended by it. This indicates a logic error in your application.") }
         
-        let task = self.merchant.commitPurchaseTask(for: purchase, applying: discount)
+        let task = self.merchant.commitPurchaseTask(for: purchase)
         task.onCompletion = { result in
             self.commitPurchaseTask = nil
             
-            DispatchQueue.main.async {
-                self.didChangeState(for: [product])
-                
-                switch result {
-                    case .success(_):
+            self.didChangeState(for: [product])
+            
+            switch result {
+                case .success(_):
+                    DispatchQueue.main.async {
                         self.delegate?.productInterfaceController(self, didCommit: purchase, with: .success)
-                    case .failure(let baseError):
-                        let error: CommitPurchaseError
-                        
-                        let underlyingError = (baseError as NSError).userInfo[NSUnderlyingErrorKey] as? Error
-                        
-                        switch (baseError, underlyingError) {
-                            case (SKError.paymentCancelled, _):
-                                error = .userCancelled
-                            #if os(iOS)
-                            case (SKError.storeProductNotAvailable, _):
-                                error = .purchaseNotAvailable
-                            #endif
-                            case (SKError.paymentInvalid, _):
-                                error = .paymentInvalid
-                            case (SKError.paymentNotAllowed, _):
-                                error = .paymentNotAllowed
-                            case (let networkError as URLError, _), (_, let networkError as URLError):
-                                error = .networkError(networkError)
-                            default:
-                                error = .genericProblem(baseError)
-                        }
-
+                    }
+                case .failure(let baseError):
+                    let error: CommitPurchaseError
+                    
+                    let underlyingError = (baseError as NSError).userInfo[NSUnderlyingErrorKey] as? Error
+                    
+                    switch (baseError, underlyingError) {
+                        case (SKError.paymentCancelled, _):
+                            error = .userCancelled
+                        #if os(iOS)
+                        case (SKError.storeProductNotAvailable, _):
+                            error = .purchaseNotAvailable
+                        #endif
+                        case (SKError.paymentInvalid, _):
+                            error = .paymentInvalid
+                        case (SKError.paymentNotAllowed, _):
+                            error = .paymentNotAllowed
+                        case (let networkError as URLError, _), (_, let networkError as URLError):
+                            error = .networkError(networkError)
+                        default:
+                            error = .genericProblem(baseError)
+                    }
+                    
+                    DispatchQueue.main.async {
                         self.delegate?.productInterfaceController(self, didCommit: purchase, with: .failure(error))
-                }
+                    }
             }
         }
         
@@ -187,7 +189,7 @@ extension ProductInterfaceController {
                 self._subscriptionTerms = subscriptionTerms
             }
             
-            @available(iOS 11.2, macOS 10.13.2, *)
+            @available(iOS 11.2, *)
             public var subscriptionTerms: SubscriptionTerms? {
                 return self._subscriptionTerms
             }
@@ -313,7 +315,7 @@ extension ProductInterfaceController {
                         if let purchase = purchases.purchase(for: product) {
                             let subscriptionTerms: SubscriptionTerms?
                             
-                            if #available(iOS 11.2, macOS 10.13.2, *) {
+                            if #available(iOS 11.2, *) {
                                 subscriptionTerms = purchase.subscriptionTerms
                             } else {
                                 subscriptionTerms = nil

@@ -43,7 +43,7 @@ public struct Purchase : Hashable, CustomStringConvertible {
     }
     
     /// Describes the terms of the subscription purchase, such as renewal period and any introductory offers. Returns nil for non-subscription purchases.
-    @available(iOS 11.2, macOS 10.13.2, *)
+    @available(iOS 11.2, *)
     public var subscriptionTerms: SubscriptionTerms? {
         func subscriptionPeriod(from skSubscriptionPeriod: SKProductSubscriptionPeriod) -> SubscriptionPeriod? {
             let unitCount = skSubscriptionPeriod.numberOfUnits
@@ -86,7 +86,7 @@ public struct Purchase : Hashable, CustomStringConvertible {
             }
         }
         
-        @available(iOS 12.2, macOS 10.14.4, *)
+        @available(iOS 12.2, *)
         func subscriptionTermsRetentionOffer(from skProductDiscount: SKProductDiscount) -> SubscriptionTerms.RetentionOffer? {
             guard let subscriptionPeriod = subscriptionPeriod(from: skProductDiscount.subscriptionPeriod) else { return nil }
             
@@ -124,7 +124,7 @@ public struct Purchase : Hashable, CustomStringConvertible {
         }()
         
         let retentionOffers: [SubscriptionTerms.RetentionOffer] = {
-            if #available(iOS 12.2, macOS 10.14.4, *) {
+            if #available(iOS 12.2, *) {
                 return self.source.skProduct.discounts.compactMap { subscriptionTermsRetentionOffer(from: $0) }
             } else {
                 return []

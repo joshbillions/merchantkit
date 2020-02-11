@@ -15,10 +15,6 @@ public final class ServerReceiptValidator : ReceiptValidator {
         self.sharedSecret = sharedSecret
     }
     
-    public var subscriptionRenewalLeeway: ReceiptValidatorSubscriptionRenewalLeeway {
-        return .default
-    }
-    
     public func validate(_ request: ReceiptValidationRequest, completion: @escaping Completion) {
         let task = ServerReceiptValidatorTask(request: request, sharedSecret: self.sharedSecret)
         task.onCompletion = { result in
